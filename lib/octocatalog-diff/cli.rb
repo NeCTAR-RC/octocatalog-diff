@@ -127,10 +127,14 @@ module OctocatalogDiff
         ::Parallel.map(node_set, in_threads: 4) { |node| run_octocatalog_diff(node, options, logger) }
       end
 
+      # Drops catalog_diffs that are nil; likely catalog never compiled
+      catalog_diffs = catalog_diffs.compact
+
       # Return the resulting diff object if requested (generally for testing)
       # or otherwise return exit code
       return catalog_diffs.first if opts[:INTEGRATION]
 
+      # Drops diffs that have nil value; likely catalog never compiled
       all_diffs = catalog_diffs.map(&:diffs)
 
       all_diffs.each do |diff|
@@ -148,7 +152,13 @@ module OctocatalogDiff
     # logger  - Logger object
     def self.run_octocatalog_diff(node, options, logger)
       options_copy = options.merge(node: node)
-      catalog_diff = OctocatalogDiff::API::V1.catalog_diff(options_copy.merge(logger: logger))
+      begin
+        catalog_diff = OctocatalogDiff::API::V1.catalog_diff(options_copy.merge(logger: logger))
+      rescue OctocatalogDiff::Errors::FactMissingError
+        # If facts can't be retrieved, return a nil difference.
+        logger.warn "Failed to compile catalog for #{node}: Unable to retrieve facts."
+        return
+      end
       diffs = catalog_diff.diffs
 
       # Display diffs

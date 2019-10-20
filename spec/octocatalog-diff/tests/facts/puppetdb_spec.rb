@@ -95,7 +95,7 @@ describe OctocatalogDiff::Facts::PuppetDB do
         allow(OctocatalogDiff::PuppetDB).to receive(:new) { |*_arg| obj }
         expect do
           OctocatalogDiff::Facts::PuppetDB.fact_retriever(opts, node)
-        end.to raise_error(OctocatalogDiff::Errors::FactRetrievalError, /Node valid-facts not found in PuppetDB \(test/)
+        end.to raise_error(OctocatalogDiff::Errors::FactMissingError, /Node valid-facts not found in PuppetDB \(test/)
       end
 
       it 'should handle OctocatalogDiff::Errors::PuppetDBGenericError' do
