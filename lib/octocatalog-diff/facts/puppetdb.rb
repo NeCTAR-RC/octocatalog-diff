@@ -54,7 +54,7 @@ module OctocatalogDiff
             exception_class = OctocatalogDiff::Errors::FactSourceError
             exception_message = "Fact retrieval failed (#{exc.class}) (#{exc.message})"
           rescue OctocatalogDiff::Errors::PuppetDBNodeNotFoundError => exc
-            exception_class = OctocatalogDiff::Errors::FactRetrievalError
+            exception_class = OctocatalogDiff::Errors::FactMissingError
             exception_message = "Node #{node} not found in PuppetDB (#{exc.message})"
           rescue OctocatalogDiff::Errors::PuppetDBGenericError => exc
             exception_class = OctocatalogDiff::Errors::FactRetrievalError

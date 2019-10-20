@@ -17,13 +17,12 @@ describe 'puppetdb general tests' do
     expect(result[:exitcode]).to eq(0), OctocatalogDiff::Integration.format_exception(result)
   end
 
-  it 'should fail when facts are not found' do
+  it 'should return nil when facts are not found' do
     s_opts = { client_verify: false, url_map: url_map }
     opts = { argv: ['-n', 'not-found-node.github.net'], spec_repo: 'tiny-repo' }
     result = OctocatalogDiff::Integration.integration_with_puppetdb(s_opts, opts)
-    expect(result[:exitcode]).to eq(-1), OctocatalogDiff::Integration.format_exception(result)
-    expect(result[:exception].class.to_s).to eq('OctocatalogDiff::Errors::FactRetrievalError')
-    expect(result[:exception].message).to match(/Node not-found-node.github.net not found in PuppetDB/)
+    expect(result[:exitcode]).to eq(0), OctocatalogDiff::Integration.format_exception(result)
+    expect(result['diffs']).to eq([])
   end
 end
 

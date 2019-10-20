@@ -15,6 +15,7 @@ module OctocatalogDiff
 
     # Error classes for retrieving facts
     class FactSourceError < RuntimeError; end
+    class FactMissingError < RuntimeError; end
     class FactRetrievalError < RuntimeError; end
 
     # Errors for PuppetDB
