@@ -26,6 +26,9 @@ module OctocatalogDiff
     EXITCODE_FAILURE = 1
     EXITCODE_SUCCESS_WITH_DIFFS = 2
 
+    ERROR_FACT_MISSING = 1
+    ERROR_CATALOG = 2
+
     # The default type+title+attribute to ignore in catalog-diff.
     DEFAULT_IGNORES = [
       { type: 'Class' } # Don't care about classes themselves, only what they actually do!
@@ -127,8 +130,17 @@ module OctocatalogDiff
         ::Parallel.map(node_set, in_threads: 4) { |node| run_octocatalog_diff(node, options, logger) }
       end
 
-      # Drops catalog_diffs that are nil; likely catalog never compiled
-      catalog_diffs = catalog_diffs.compact
+      # Counts the different errors and prints a summary
+      num_error_fact_missing = catalog_diffs.count(ERROR_FACT_MISSING)
+      num_error_catalog = catalog_diffs.count(ERROR_CATALOG)
+      logger.info 'Run completed. Summary: ' \
+      "#{num_error_fact_missing} nodes with facts missing. " \
+      "#{num_error_catalog} nodes with catalog compilation error."
+
+      # Drops errors from catalog, we do not want to return them
+      catalog_diffs.reject! do |x|
+        (x == ERROR_FACT_MISSING || x == ERROR_CATALOG)
+      end
 
       # Return the resulting diff object if requested (generally for testing)
       # or otherwise return exit code
@@ -157,7 +169,10 @@ module OctocatalogDiff
       rescue OctocatalogDiff::Errors::FactMissingError
         # If facts can't be retrieved, return a nil difference.
         logger.warn "Failed to compile catalog for #{node}: Unable to retrieve facts."
-        return
+        return ERROR_FACT_MISSING
+      rescue OctocatalogDiff::Errors::CatalogError
+        logger.warn "Failed to compile catalog for #{node}: CatalogError."
+        return ERROR_CATALOG
       end
       diffs = catalog_diff.diffs
 
